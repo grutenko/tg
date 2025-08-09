@@ -11,6 +11,8 @@
 #define MTP_STATUS_OK 0x0
 #define MTP_STATUS_ERR_PAYLOAD_TOO_LONG 0x1
 #define MTP_STATUS_ERR_IO 0x2
+#define MTP_STATUS_ERR_MEM 0x3
+#define MTP_STATUS_MALFORMED 0x4
 
 struct mtp_hdr
 {

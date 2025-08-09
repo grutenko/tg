@@ -1,8 +1,5 @@
 #define _POSIX_C_SOURCE 199309L
 
-#include <string.h>
-#include <sys/types.h>
-
 #include "mtp-conn.h"
 #include "endian.h"
 #include "iobuf.h"
@@ -10,8 +7,10 @@
 #include <stdint.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <string.h>
+#include <sys/types.h>
 
-static uint64_t __msgidgen()
+static uint64_t msgidgen()
 {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
@@ -19,6 +18,32 @@ static uint64_t __msgidgen()
         return (((uint64_t)ts.tv_sec << 32) |
                 (((uint64_t)ts.tv_nsec << 32) / 1000000000)) &
                ~0x3ULL;
+}
+
+static inline uint64_t read_u64le(const void *src)
+{
+        uint64_t val;
+        memcpy(&val, src, sizeof(val));
+        return u64_le(val);
+}
+
+static inline uint32_t read_u32le(const void *src)
+{
+        uint32_t val;
+        memcpy(&val, src, sizeof(val));
+        return u32_le(val);
+}
+
+static inline void write_u64le(const void *dst, uint64_t v)
+{
+        v = u64_le(v);
+        memcpy(dst, &v, sizeof(uint64_t));
+}
+
+static inline void write_u32le(const void *dst, uint32_t v)
+{
+        v = u32_le(v);
+        memcpy(dst, &v, sizeof(uint32_t));
 }
 
 int mtp_conn_send(struct mtp_conn *conn)
@@ -42,22 +67,29 @@ int mtp_conn_send(struct mtp_conn *conn)
                                   iobuf_len(&conn->out_buffer) + 20))
                 goto io_error;
 
-        uint64_t tmp64;
-        uint32_t tmp32;
+        /**
+         * Create MTProto message header
+         */
+
         uint8_t hdr[20];
-        tmp64 = u64_le(conn->out_hdr.auth_key_id);
-        memcpy(hdr, &tmp64, sizeof(uint64_t));
-        tmp64 = u64_le(conn->out_hdr.msg_id);
-        memcpy(hdr + 8, &tmp64, sizeof(uint64_t));
-        tmp32 = u32_le(conn->out_hdr.msg_len);
-        memcpy(hdr + 16, &tmp32, sizeof(uint32_t));
+        write_u64le(hdr, conn->out_hdr.auth_key_id);
+        write_u64le(hdr + 8, conn->out_hdr.msg_id);
+        write_u32le(hdr + 16, conn->out_hdr.msg_len);
 
         if (!mtp_transp_write(&conn->transp, hdr, 20))
                 goto io_error;
 
+        /**
+         * Send payload
+         */
+
         if (!mtp_transp_write(&conn->transp, conn->out_buffer.p,
                               iobuf_len(&conn->out_buffer)))
                 goto io_error;
+
+        /**
+         * Correct padding, etc...
+         */
 
         if (!mtp_transp_wend(&conn->transp))
                 goto io_error;
@@ -76,4 +108,88 @@ error:
         return 0;
 }
 
-int mtp_conn_recv(struct mtp_conn *conn) {}
+static inline size_t min(size_t a, size_t b)
+{
+        return a > b ? b : a;
+}
+
+int mtp_conn_recv(struct mtp_conn *conn)
+{
+        memset(&conn->in_hdr, 0, sizeof(struct mtp_hdr));
+        iobuf_clear(&conn->in_buffer);
+
+        if (!mtp_transp_rbegin(&conn->transp))
+                goto io_error;
+
+        if (conn->transp.len <= 20)
+                goto malformed;
+
+        if (conn->transp.len > MTP_FRAME_MAXLEN)
+                goto payload_too_long;
+
+        /**
+         * Read MTProto header (20bytes)
+         */
+
+        uint8_t hdr[20];
+        if (!mtp_transp_read(&conn->transp, hdr, 20))
+                goto io_error;
+
+        conn->in_hdr.auth_key_id = read_u64le(hdr);
+        conn->in_hdr.msg_id = read_u64le(hdr + 8);
+        conn->in_hdr.msg_len = read_u32le(hdr + 16);
+
+        if (conn->in_hdr.msg_len <= 4)
+                goto malformed;
+
+        conn->in_hdr.msg_len -= 4;
+
+        /**
+         * Read mtproto payload
+         */
+
+        uint8_t b[256];
+        size_t reserved = conn->in_hdr.msg_len;
+        size_t part = 256;
+        while (reserved)
+        {
+                part = min(256, reserved);
+
+                if (!mtp_transp_read(&conn->transp, b, part))
+                        goto io_error_clear;
+
+                if (!iobuf_write(&conn->in_buffer, b, part))
+                        goto mem_error_clear;
+
+                reserved -= part;
+        }
+
+        if (!mtp_transp_rend(&conn->transp))
+                goto io_error_clear;
+
+        return 1;
+
+malformed:
+        conn->in_hdr.status = MTP_STATUS_MALFORMED;
+        goto error;
+
+payload_too_long:
+        conn->in_hdr.status = MTP_STATUS_ERR_PAYLOAD_TOO_LONG;
+        goto error;
+
+io_error_clear:
+        iobuf_clear(&conn->in_buffer);
+        goto io_error;
+
+mem_error_clear:
+        conn->in_hdr.status = MTP_STATUS_ERR_MEM;
+        iobuf_clear(&conn->in_buffer);
+        return 0;
+
+io_error:
+        conn->in_hdr.status = MTP_STATUS_ERR_IO;
+        goto error;
+
+error:
+        return 0;
+}

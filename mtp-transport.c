@@ -213,7 +213,7 @@ int mtp_transp_read(struct mtp_transp *t, uint8_t *b, size_t len)
         return t->read(t, b, len);
 }
 
-int mtp_trasp_rend(struct mtp_transp *t)
+int mtp_transp_rend(struct mtp_transp *t)
 {
         return t->r_end(t);
 }
