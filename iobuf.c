@@ -26,7 +26,8 @@ static int iobuf_reserve_if_needed(struct iobuf *b, size_t len)
                 return 1;
 
         size_t needed = len - (b->alloc - (b->wp - b->p));
-        size_t new_alloc = b->alloc + (IOBUF_BLOCK * (needed / IOBUF_BLOCK + 1));
+        size_t new_alloc =
+            b->alloc + (IOBUF_BLOCK * (needed / IOBUF_BLOCK + 1));
         uint8_t *p = realloc(b->p, new_alloc);
 
         if (!p)

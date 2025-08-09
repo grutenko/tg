@@ -2,7 +2,7 @@
 #define connection_h
 
 #include "iobuf.h"
-#include "transport.h"
+#include "mtp-transport.h"
 
 #include <stdint.h>
 
@@ -23,7 +23,7 @@ struct mtp_hdr
 struct mtp_conn
 {
         struct mtp_transp transp;
-        
+
         uint8_t auth_key[256];
         uint64_t auth_key_id;
 
@@ -34,7 +34,8 @@ struct mtp_conn
         struct mtp_hdr out_hdr;
 
         /**
-         * recv and send buffers will be cleared after every mtp_recv(), mtp_send()
+         * recv and send buffers will be cleared after every mtp_recv(),
+         * mtp_send()
          */
         struct iobuf in_buffer;
         struct iobuf out_buffer;
@@ -46,20 +47,15 @@ struct mtp_conn
 };
 
 /**
- * Initialize buffers and data in structures.
- */
-int mtp_init(struct mtp_conn *conn, const char *host, int transport);
-
-/**
  * Send out buffer and write generated header into out_hdr
  * * Clear buffer data after send
  */
-int mtp_send(struct mtp_conn *conn);
+int mtp_conn_send(struct mtp_conn *conn);
 
 /**
  * Recv frame into in buffer and parse mtproto header into in_hdr
  * * Clear in_buffer before recv
  */
-int mtp_recv(struct mtp_conn *conn);
+int mtp_conn_recv(struct mtp_conn *conn);
 
 #endif

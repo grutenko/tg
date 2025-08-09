@@ -15,10 +15,8 @@ uint16_t u16_swap(uint16_t a)
 
 uint32_t u32_swap(uint32_t x)
 {
-        return ((x >> 24) & 0x000000FF) |
-               ((x >> 8) & 0x0000FF00) |
-               ((x << 8) & 0x00FF0000) |
-               ((x << 24) & 0xFF000000);
+        return ((x >> 24) & 0x000000FF) | ((x >> 8) & 0x0000FF00) |
+               ((x << 8) & 0x00FF0000) | ((x << 24) & 0xFF000000);
 }
 
 uint64_t u64_swap(uint64_t x)
@@ -33,12 +31,12 @@ uint64_t u64_swap(uint64_t x)
                ((x << 56) & 0xFF00000000000000ULL);
 }
 
-int32_t i32_le(int32_t a)
+uint32_t u32_le(uint32_t a)
 {
         return is_big_endian() ? u32_swap(a) : a;
 }
 
-int64_t i64_le(int64_t a)
+uint64_t u64_le(uint64_t a)
 {
         return is_big_endian() ? u64_swap(a) : a;
 }

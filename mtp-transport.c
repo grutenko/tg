@@ -1,4 +1,4 @@
-#include "transport.h"
+#include "mtp-transport.h"
 #include "endian.h"
 
 #include <arpa/inet.h>
@@ -84,7 +84,8 @@ static int mtp_abridged_w_begin_impl(struct mtp_transp *t, size_t len)
         return 1;
 }
 
-static int mtp_abridged_write_impl(struct mtp_transp *t, const uint8_t *b, size_t len)
+static int mtp_abridged_write_impl(struct mtp_transp *t, const uint8_t *b,
+                                   size_t len)
 {
         if (send_all(t->fd, b, len) < 0)
                 return 0;
@@ -200,4 +201,34 @@ int mtp_transp_open(struct mtp_transp *t, int mode, const char *host, int flags)
         default:
                 return 0;
         }
+}
+
+int mtp_transp_rbegin(struct mtp_transp *t)
+{
+        return t->r_begin(t);
+}
+
+int mtp_transp_read(struct mtp_transp *t, uint8_t *b, size_t len)
+{
+        return t->read(t, b, len);
+}
+
+int mtp_trasp_rend(struct mtp_transp *t)
+{
+        return t->r_end(t);
+}
+
+int mtp_transp_wbegin(struct mtp_transp *t, size_t len)
+{
+        return t->w_begin(t, len);
+}
+
+int mtp_transp_write(struct mtp_transp *t, uint8_t *b, size_t len)
+{
+        return t->write(t, b, len);
+}
+
+int mtp_transp_wend(struct mtp_transp *t)
+{
+        return t->w_end(t);
 }

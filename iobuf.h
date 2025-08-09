@@ -1,6 +1,7 @@
 #ifndef iobuf_h
 #define iobuf_h
 
+#include <stdint.h>
 #include <stdlib.h>
 
 struct iobuf
