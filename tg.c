@@ -11,8 +11,7 @@ int main()
         struct mtp_conn conn;
         memset(&conn, 0, sizeof(conn));
 
-        if (!mtp_transp_open(&conn.transp, MTP_TRANSP_ABRIDGED,
-                             "127.0.0.1", 0))
+        if (!mtp_transp_open(&conn.transp, MTP_TRANSP_ABRIDGED, "127.0.0.1"))
                 goto error;
         if (!iobuf_init(&conn.in_buffer))
                 goto error;

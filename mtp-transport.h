@@ -43,8 +43,7 @@ struct mtp_transp
         int (*r_end)(struct mtp_transp *t);
 };
 
-int mtp_transp_open(struct mtp_transp *t, int type, const char *host,
-                    int flags);
+int mtp_transp_open(struct mtp_transp *t, int type, const char *host);
 
 int mtp_transp_rbegin(struct mtp_transp *t);
 

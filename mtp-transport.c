@@ -149,7 +149,7 @@ static int mtp_abridged_r_end_impl(struct mtp_transp *t)
         return 1;
 }
 
-static int mtp_abridged_open(struct mtp_transp *t, const char *host, int flags)
+static int mtp_abridged_open(struct mtp_transp *t, const char *host)
 {
         int rc;
         int fd;
@@ -192,12 +192,12 @@ error:
         return 0;
 }
 
-int mtp_transp_open(struct mtp_transp *t, int mode, const char *host, int flags)
+int mtp_transp_open(struct mtp_transp *t, int mode, const char *host)
 {
         switch (mode)
         {
         case MTP_TRANSP_ABRIDGED:
-                return mtp_abridged_open(t, host, flags);
+                return mtp_abridged_open(t, host);
         default:
                 return 0;
         }

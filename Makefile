@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -O2 -std=c11
 LDFLAGS =
 TARGET = tg
 
-SRCS = $(wildcard *.c)
+SRCS = $(wildcard *.c) $(wildcard crypto/*.c)
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-static uint64_t msgidgen()
+static uint64_t __msgidgen()
 {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
@@ -34,13 +34,13 @@ static inline uint32_t read_u32le(const void *src)
         return u32_le(val);
 }
 
-static inline void write_u64le(const void *dst, uint64_t v)
+static inline void write_u64le(void *dst, uint64_t v)
 {
         v = u64_le(v);
         memcpy(dst, &v, sizeof(uint64_t));
 }
 
-static inline void write_u32le(const void *dst, uint32_t v)
+static inline void write_u32le(void *dst, uint32_t v)
 {
         v = u32_le(v);
         memcpy(dst, &v, sizeof(uint32_t));
