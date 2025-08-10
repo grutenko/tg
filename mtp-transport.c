@@ -149,6 +149,14 @@ static int mtp_abridged_r_end_impl(struct mtp_transp *t)
         return 1;
 }
 
+static int mtp_abridged_close_impl(struct mtp_transp *t)
+{
+        if (close(t->fd) < 0)
+                return 0;
+
+        return 1;
+}
+
 static int mtp_abridged_open(struct mtp_transp *t, const char *host)
 {
         int rc;
@@ -179,6 +187,7 @@ static int mtp_abridged_open(struct mtp_transp *t, const char *host)
         t->w_begin = mtp_abridged_w_begin_impl;
         t->write = mtp_abridged_write_impl;
         t->w_end = mtp_abridged_w_end_impl;
+        t->close = mtp_abridged_close_impl;
 
         uint8_t byte = MTP_TRANSPORT_ABRIDGED_PACKET;
         rc = send(fd, &byte, 1, 0);
@@ -231,4 +240,9 @@ int mtp_transp_write(struct mtp_transp *t, uint8_t *b, size_t len)
 int mtp_transp_wend(struct mtp_transp *t)
 {
         return t->w_end(t);
+}
+
+int mtp_transp_close(struct mtp_transp *t)
+{
+        return t->close(t);
 }

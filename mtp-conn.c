@@ -3,22 +3,12 @@
 #include "mtp-conn.h"
 #include "endian.h"
 #include "iobuf.h"
+#include "mtp-msg-id.h"
 
 #include <stdint.h>
 #include <sys/socket.h>
-#include <time.h>
 #include <string.h>
 #include <sys/types.h>
-
-static uint64_t __msgidgen()
-{
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-
-        return (((uint64_t)ts.tv_sec << 32) |
-                (((uint64_t)ts.tv_nsec << 32) / 1000000000)) &
-               ~0x3ULL;
-}
 
 static inline uint64_t read_u64le(const void *src)
 {
@@ -49,7 +39,7 @@ static inline void write_u32le(void *dst, uint32_t v)
 int mtp_conn_send(struct mtp_conn *conn)
 {
         conn->out_hdr.status = MTP_STATUS_OK;
-        conn->out_hdr.msg_id = __msgidgen();
+        conn->out_hdr.msg_id = msgidgen();
         conn->out_hdr.msg_len = iobuf_len(&conn->out_buffer) + 4;
         conn->out_hdr.auth_key_id = conn->auth_key_id;
 
