@@ -48,6 +48,8 @@ struct mtp_conn
         uint64_t last_msg_id;
 };
 
+const char *mtp_strerr(int err);
+
 /**
  * Send out buffer and write generated header into out_hdr
  * * Clear buffer data after send

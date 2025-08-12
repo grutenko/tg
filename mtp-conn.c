@@ -183,3 +183,14 @@ io_error:
 error:
         return 0;
 }
+
+const char *mtp_strerr(int err)
+{
+        static const char *err_tab[] = {"OK", "Message payload too long.",
+                                        "Input/Output error.", "Memory error.",
+                                        "Message malformed."};
+        if (err < 0 | err > 4)
+                return "Unknown error";
+
+        return err_tab[err];
+}

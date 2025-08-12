@@ -8,9 +8,10 @@
 
 struct mtp_transp
 {
-        int fd;
-        size_t len;
         int status;
+        int fd;
+        uint32_t crc32;
+        size_t len;
 
         /**
          * Begin sending frame by selected transport
